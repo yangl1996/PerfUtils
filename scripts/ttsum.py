@@ -62,6 +62,8 @@ relativeEvents = {}
 
 eventCount = {}
 
+eventStartStack = {}
+
 def scan(f, startingEvent):
     """
     Scan the log file given by 'f' (handle for an open file) and collect
@@ -75,12 +77,25 @@ def scan(f, startingEvent):
     startTime = 0.0
     lastTime = -1.0
     for line in f:
-        match = re.match(r".* function: (.*), cpu: .*, tsc: ([0-9.]+), data: .*", line)
+        match = re.match(r".* function: (.*), cpu: .*, kind: (.*), tsc: ([0-9.]+), data: .*", line)
         if not match:
             continue
-        thisEventTime = float(match.group(2))
+        thisEventTime = float(match.group(3))
         thisEventInterval = 0
         thisEvent = match.group(1)
+        thisEventKind = match.group(2)
+        if thisEventKind == "function-enter":
+            if not thisEvent in eventStartStack:
+                eventStartStack[thisEvent] = []
+            eventStartStack[thisEvent].append(thisEventTime)
+            continue
+        elif thisEventKind == "function-exit":
+            ts = eventStartStack[thisEvent].pop()
+            thisEventInterval = thisEventTime - ts
+        else:
+            print("neither enter nor exit")
+            continue
+
         if options.noNumbers:
             thisEvent = re.sub('[0-9]+', '?', thisEvent)
         if (thisEventTime < lastTime):
