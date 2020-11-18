@@ -75,12 +75,12 @@ def scan(f, startingEvent):
     startTime = 0.0
     lastTime = -1.0
     for line in f:
-        match = re.match(' *([0-9.]+) ns \(\+ *([0-9.]+) ns\): (.*)', line)
+        match = re.match(r".* function: (.*), cpu: .*, tsc: ([0-9.]+), data: .*", line)
         if not match:
             continue
-        thisEventTime = float(match.group(1))
-        thisEventInterval = float(match.group(2))
-        thisEvent = match.group(3)
+        thisEventTime = float(match.group(2))
+        thisEventInterval = 0
+        thisEvent = match.group(1)
         if options.noNumbers:
             thisEvent = re.sub('[0-9]+', '?', thisEvent)
         if (thisEventTime < lastTime):
