@@ -88,10 +88,11 @@ def scan(f, startingEvent):
             if not thisEvent in eventStartStack:
                 eventStartStack[thisEvent] = []
             eventStartStack[thisEvent].append(thisEventTime)
-            continue
+            thisEvent = thisEvent + " ENT"
         elif thisEventKind == "function-exit":
             ts = eventStartStack[thisEvent].pop()
             thisEventInterval = thisEventTime - ts
+            thisEvent = thisEvent + " EXIT"
         else:
             print("neither enter nor exit")
             continue
@@ -234,9 +235,13 @@ if options.startEvent:
                     sum(times)/len(times), intervals[len(intervals)//2],
                     len(times))
             else:
+                if eventName.find("lru") != -1:
+                    continue
+                if eventName.find("slab") != -1:
+                    continue
                 message = '%-*s  %8.1f %8.1f %8.1f %8.1f %8.1f %7d' % (
                     nameLength, eventName, medianTime, medianInterval,
-                    intervals[0], intervals[-1], sum(intervals)/len(intervals),
+                    intervals[0], intervals[int(0.99 * float(len(intervals)))], sum(intervals)/len(intervals),
                     len(intervals))
             outputInfo.append([medianTime, message])
 
