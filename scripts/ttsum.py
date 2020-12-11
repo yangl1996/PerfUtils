@@ -235,10 +235,6 @@ if options.startEvent:
                     sum(times)/len(times), intervals[len(intervals)//2],
                     len(times))
             else:
-                if eventName.find("lru") != -1:
-                    continue
-                if eventName.find("slab") != -1:
-                    continue
                 message = '%-*s  %8.1f %8.1f %8.1f %8.1f %8.1f %7d' % (
                     nameLength, eventName, medianTime, medianInterval,
                     intervals[0], intervals[int(0.99 * float(len(intervals)))], sum(intervals)/len(intervals),
