@@ -1,0 +1,1 @@
+./ttsum.py ../log-read.yaml -s try_read_command_binary -e _transmit_post
