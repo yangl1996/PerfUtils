@@ -13,9 +13,6 @@ args = parser.parse_args()
 
 # precompile the regex for performance
 tracelineRegex = re.compile(r"  - .* function: (.*), cpu: .*, kind: (.*), tsc: ([0-9.]+), data: .*")
-# collect the time to handle each request
-latency = []
-startTime = 0
 
 def isEndEvent(func, event):
     if func == args.end and event == "function-exit":
@@ -29,25 +26,30 @@ def isStartEvent(func, event):
     else:
         return False
 
-# read the file once to account for event latency
-started = False
-for line in args.trace:
-    match = tracelineRegex.match(line)
-    if not match:
-        continue
-    func = match.group(1)
-    event = match.group(2)
-    tsc = int(match.group(3))
-    # First match the end event. If the end event is not specified, use the start event
-    if isEndEvent(func, event) and started:
-        t = tsc - startTime
-        latency.append(t)
-    # Then we match the start event.
-    if isStartEvent(func, event):
-        startTime = tsc
-        started = True
+def CollectLatency(t):
+    # read the file once to account for event latency
+    startTime = 0
+    latency = []
+    started = False
+    for line in t:
+        match = tracelineRegex.match(line)
+        if not match:
+            continue
+        func = match.group(1)
+        event = match.group(2)
+        tsc = int(match.group(3))
+        # First match the end event. If the end event is not specified, use the start event
+        if isEndEvent(func, event) and started:
+            t = tsc - startTime
+            latency.append(t)
+        # Then we match the start event.
+        if isStartEvent(func, event):
+            startTime = tsc
+            started = True
+    return latency
 
 # sort the latency list to get the tail
+latency = CollectLatency(args.trace)
 latency.sort()
 tailLatency = latency[int(len(latency) * args.tail / 100.0)]
 print("Tail latency: {} ns @ {} %".format(tailLatency, args.tail))
